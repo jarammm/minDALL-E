@@ -14,11 +14,11 @@ from PIL import Image
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dalle.models import Dalle
-from dalle.utils.utils import set_seed, clip_score
+from dalle.utils.utils import set_seed, clip_score, clip_score_rank
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--num_candidates', type=int, default=96)
+parser.add_argument('-n', '--num_candidates', type=int, default=5)
 parser.add_argument('--prompt', type=str, default='A painting of a tree on the ocean')
 parser.add_argument('--softmax-temperature', type=float, default=1.0)
 parser.add_argument('--top-k', type=int, default=256)
@@ -47,7 +47,13 @@ images = np.transpose(images, (0, 2, 3, 1))
 # CLIP Re-ranking
 model_clip, preprocess_clip = clip.load("ViT-B/32", device=device)
 model_clip.to(device=device)
-rank = clip_score(prompt=args.prompt,
+# rank = clip_score(prompt=args.prompt,
+#                   images=images,
+#                   model_clip=model_clip,
+#                   preprocess_clip=preprocess_clip,
+#                   device=device)
+
+scores, rank = clip_score_rank(prompt=args.prompt,
                   images=images,
                   model_clip=model_clip,
                   preprocess_clip=preprocess_clip,
@@ -55,7 +61,11 @@ rank = clip_score(prompt=args.prompt,
 
 # Save images
 images = images[rank]
-print(rank, images.shape)
+print("image shape: ", images.shape)
+print(f"rank (score)")
+for idx, score in enumerate(scores):
+    print(f"{idx} ({score})")
+
 if not os.path.exists('./figures'):
     os.makedirs('./figures')
 for i in range(min(16, args.num_candidates)):

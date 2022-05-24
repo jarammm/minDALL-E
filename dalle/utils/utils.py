@@ -42,6 +42,23 @@ def clip_score(prompt: str,
     rank = torch.argsort(scores, descending=True).cpu().numpy()
     return rank
 
+@torch.no_grad()
+def clip_score_rank(prompt: str,
+               images: np.ndarray,
+               model_clip: torch.nn.Module,
+               preprocess_clip,
+               device: str) -> np.ndarray:
+    images = [preprocess_clip(Image.fromarray((image*255).astype(np.uint8))) for image in images]
+    images = torch.stack(images, dim=0).to(device=device)
+    texts = clip.tokenize(prompt).to(device=device)
+    texts = torch.repeat_interleave(texts, images.shape[0], dim=0)
+
+    image_features = model_clip.encode_image(images)
+    text_features = model_clip.encode_text(texts)
+
+    scores = F.cosine_similarity(image_features, text_features).squeeze()
+    rank = torch.argsort(scores, descending=True).cpu().numpy()
+    return sorted(scores, reverse=True), rank
 
 def download(url: str, root: str) -> str:
     os.makedirs(root, exist_ok=True)

@@ -53,18 +53,17 @@ model_clip.to(device=device)
 #                   preprocess_clip=preprocess_clip,
 #                   device=device)
 
-scores, rank = clip_score_rank(prompt=args.prompt,
+scores, ranks = clip_score_rank(prompt=args.prompt,
                   images=images,
                   model_clip=model_clip,
                   preprocess_clip=preprocess_clip,
                   device=device)
 
 # Save images
-images = images[rank]
+images = images[ranks]
 print("image shape: ", images.shape)
-print(f"rank (score)")
 for idx, score in enumerate(scores):
-    print(f"{idx} ({score})")
+    print(f"rank {idx+1} | score: {score}")
 
 if not os.path.exists('./figures'):
     os.makedirs('./figures')

@@ -26,3 +26,4 @@ test.*/
 
 # MacOSX
 **/*.DS_Store
+*.json
